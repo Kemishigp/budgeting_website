@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  accounts     Account[]
+  transactions Transaction[]
+  recommendations Recommendation[]
+}
+
+model Account {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  provider   String
+  accountName String
+  last4      String
+  currency   String
+  createdAt  DateTime @default(now())
+  transactions Transaction[]
+}
+
+model Transaction {
+  id         Int      @id @default(autoincrement())
+  account    Account  @relation(fields: [accountId], references: [id])
+  accountId  Int
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  amount     Float
+  currency   String
+  merchant   String
+  date       DateTime
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  rawJson    Json
+  createdAt  DateTime @default(now())
+}
+
+model Category {
+  id           Int           @id @default(autoincrement())
+  name         String
+  transactions Transaction[]
+}
+
+model Recommendation {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  text      String
+  createdAt DateTime @default(now())
+}
