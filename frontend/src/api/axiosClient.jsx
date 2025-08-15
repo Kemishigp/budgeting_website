@@ -1,17 +1,21 @@
-// API client with base URL and auth headers
 import axios from 'axios';
-import { getAccessToken } from '../context/AuthContext';
 
+// Base axios instance
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:5001/api',
-  withCredentials: true, // for cookies if using refresh token
+  baseURL: 'http://localhost:5000/api', // replace with your backend URL
 });
 
-// Request interceptor to attach token
-axiosClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// Helpers that accept the token
+export const getWithToken = (url, token) => {
+  return axiosClient.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const postWithToken = (url, data, token) => {
+  return axiosClient.post(url, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
 
 export default axiosClient;

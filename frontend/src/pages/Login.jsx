@@ -35,6 +35,8 @@
 // export default Login;
 
 import { useState } from 'react';
+const { getAccessToken } = useAuth();
+const token = getAccessToken();
 import { useAuth } from '../context/AuthContext';
 import { api, setAuthToken } from '../api/api';
 import { useNavigate } from 'react-router-dom';

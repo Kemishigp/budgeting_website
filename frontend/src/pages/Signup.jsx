@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+const { getAccessToken } = useAuth();
+const token = getAccessToken();
 import { api, setAuthToken } from '../api/api';
 import { useNavigate } from 'react-router-dom';
 

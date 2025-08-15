@@ -12,6 +12,9 @@
 
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+const { getAccessToken } = useAuth();
+const token = getAccessToken();
+
 
 export const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
