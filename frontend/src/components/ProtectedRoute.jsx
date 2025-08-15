@@ -1,23 +1,9 @@
-// import React from 'react';
-// import { Navigate } from 'react-router-dom';
-// import { useAuth } from '../context/AuthContext';
-
-// const ProtectedRoute = ({ children }) => {
-//   const { user } = useAuth();
-//   if (!user) return <Navigate to="/login" replace />;
-//   return children;
-// };
-
-// export default ProtectedRoute;
-
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-const { getAccessToken } = useAuth();
-const token = getAccessToken();
-
 
 export const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth(); // ✅ hook inside component
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };

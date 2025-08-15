@@ -1,0 +1,282 @@
+axiosClient.jsx: import axios from 'axios';
+
+// Base axios instance
+const axiosClient = axios.create({
+  baseURL: 'http://localhost:5000/api', // replace with your backend URL
+});
+
+// Helpers that accept the token
+export const getWithToken = (url, token) => {
+  return axiosClient.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const postWithToken = (url, data, token) => {
+  return axiosClient.post(url, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export default axiosClient;
+
+ProtectedRoute.jsx: import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+const { getAccessToken } = useAuth();
+const token = getAccessToken();
+
+
+export const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
+
+TransactionTable: import { useState } from "react";
+
+export default function TransactionTable({ data }) {
+  const [search, setSearch] = useState("");
+
+  const filteredData = data.filter(
+    (row) =>
+      row.Description?.toLowerCase().includes(search.toLowerCase()) ||
+      row.Category?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search transactions..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="border p-2 rounded mb-4 w-full"
+      />
+
+      <table className="min-w-full border border-gray-300">
+        <thead className="bg-gray-100">
+          <tr>
+            {Object.keys(data[0]).map((key) => (
+              <th key={key} className="px-4 py-2 border">{key}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filteredData.map((row, i) => (
+            <tr key={i} className="border-t">
+              {Object.values(row).map((val, j) => (
+                <td key={j} className="px-4 py-2 border">{val}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+TransactionUpload: import Papa from "papaparse";
+
+export default function TransactionUpload({ onUpload }) {
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true, // assumes first row is column headers
+      skipEmptyLines: true,
+      complete: (results) => {
+        onUpload(results.data);
+      },
+    });
+  };
+
+  return (
+    <div className="mb-6">
+      <label className="block mb-2 font-medium">Upload Transactions (CSV)</label>
+      <input
+        type="file"
+        accept=".csv"
+        onChange={handleFileUpload}
+        className="border p-2 rounded"
+      />
+    </div>
+  );
+}
+
+AuthContext.jsx: import { createContext, useState, useContext } from 'react';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const login = (newToken, userData) => {
+    setToken(newToken);
+    setUser(userData);
+  };
+
+  const logout = () => {
+    setToken(null);
+    setUser(null);
+  };
+
+  const isAuthenticated = !!token;
+
+  return (
+    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Custom hook to use auth context
+export const useAuth = () => useContext(AuthContext);
+
+Dashboard.jsx: export const Dashboard = () => {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome to your dashboard!</p>
+    </div>
+  );
+};
+
+Login.jsx: import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { api, setAuthToken } from '../api/api';
+import { useNavigate } from 'react-router-dom';
+
+export const Login = () => {
+  const { login } = useAuth(); // ✅ move inside component
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      login(res.data.token, { email });
+      setAuthToken(res.data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    }
+  };
+
+  return (
+    <div>
+      <h1>Login</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
+};
+
+
+Settings.jsx: export const Settings = () => {
+  return (
+    <div>
+      <h1>Settings</h1>
+      <p>Settings page.</p>
+    </div>
+  );
+};
+
+Signup.jsx: import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { api, setAuthToken } from '../api/api';
+import { useNavigate } from 'react-router-dom';
+
+export const Signup = () => {
+  const { login } = useAuth(); // ✅ move inside component
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/auth/signup', { email, password });
+      login(res.data.token, { email });
+      setAuthToken(res.data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed');
+    }
+  };
+
+  return (
+    <div>
+      <h1>Signup</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+        <button type="submit">Signup</button>
+      </form>
+    </div>
+  );
+};
+
+Transactions.jsx: import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getWithToken } from '../api/axiosClient';
+import TransactionUpload from '../components/TransactionUpload';
+import TransactionTable from '../components/TransactionTable';
+
+const Transactions = () => {
+  const { token } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    getWithToken('/transactions', token)
+      .then(res => setTransactions(res.data.transactions))
+      .catch(err => console.error('Error fetching transactions:', err));
+  }, [token]);
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Transactions</h1>
+      <TransactionUpload onUpload={setTransactions} />
+      {transactions.length > 0 && <TransactionTable data={transactions} />}
+    </div>
+  );
+};
+
+export default Transactions;
+
+App.jsx: import React from 'react';
+import { AuthProvider } from './context/AuthContext';
+import Transactions from './pages/Transactions';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Transactions />
+    </AuthProvider>
+  );
+}
+
+export default App;
+
+main.jsx: import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App  from './App';
+import '@vitejs/plugin-react';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
